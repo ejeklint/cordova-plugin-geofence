@@ -18,6 +18,15 @@ func log(message: String){
     NSLog("%@ - %@", TAG, message)
 }
 
+func delay(delay:Double, closure:()->()) {
+    dispatch_after(
+        dispatch_time(
+            DISPATCH_TIME_NOW,
+            Int64(delay * Double(NSEC_PER_SEC))
+        ),
+        dispatch_get_main_queue(), closure)
+}
+
 @available(iOS 8.0, *)
 @objc(HWPGeofencePlugin) class GeofencePlugin : CDVPlugin {
     lazy var geoNotificationManager = GeoNotificationManager()
@@ -41,8 +50,6 @@ func log(message: String){
 
     func initialize(command: CDVInvokedUrlCommand) {
         log("Plugin initialization")
-        //let faker = GeofenceFaker(manager: geoNotificationManager)
-        //faker.start()
 
         if iOS8 {
             promptForNotificationPermission()
@@ -184,10 +191,12 @@ class GeofenceFaker {
                         dispatch_async(dispatch_get_main_queue()) {
                             if let region = self.geoNotificationManager.getMonitoredRegion(id) {
                                 log("FAKER Trigger didEnterRegion")
+                                /*
                                 self.geoNotificationManager.locationManager(
                                     self.geoNotificationManager.locationManager,
                                     didEnterRegion: region
                                 )
+                                */
                             }
                         }
                     }
@@ -331,7 +340,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
     func locationManager(manager: CLLocationManager, didFinishDeferredUpdatesWithError error: NSError?) {
         log("deferred fail error: \(error)")
     }
-
+/*
     func locationManager(manager: CLLocationManager, didEnterRegion region: CLRegion) {
         log("Entering region \(region.identifier)")
         handleTransition(region, transitionType: 1)
@@ -341,17 +350,33 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
         log("Exiting region \(region.identifier)")
         handleTransition(region, transitionType: 2)
     }
-
+*/
     func locationManager(manager: CLLocationManager, didStartMonitoringForRegion region: CLRegion) {
         let lat = (region as! CLCircularRegion).center.latitude
         let lng = (region as! CLCircularRegion).center.longitude
         let radius = (region as! CLCircularRegion).radius
 
         log("Starting monitoring for region \(region) lat \(lat) lng \(lng) of radius \(radius)")
+        delay(0.2) {
+            log("Requesting State for region \(region) lat \(lat) lng \(lng)")
+            manager.requestStateForRegion(region)
+        }
     }
 
     func locationManager(manager: CLLocationManager, didDetermineState state: CLRegionState, forRegion region: CLRegion) {
         log("State for region " + region.identifier)
+        
+         if state == CLRegionState.Inside {
+             log("In \(region.identifier)")
+             handleTransition(region, transitionType: 1)
+         }
+         else if state == CLRegionState.Outside {
+             log("Not in \(region.identifier)")
+             handleTransition(region, transitionType: 2)
+         }
+         else {
+             log("Not determined")
+         }
     }
 
     func locationManager(manager: CLLocationManager, monitoringDidFailForRegion region: CLRegion?, withError error: NSError) {
