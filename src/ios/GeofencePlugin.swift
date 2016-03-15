@@ -340,17 +340,7 @@ class GeoNotificationManager : NSObject, CLLocationManagerDelegate {
     func locationManager(manager: CLLocationManager, didFinishDeferredUpdatesWithError error: NSError?) {
         log("deferred fail error: \(error)")
     }
-/*
-    func locationManager(manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        log("Entering region \(region.identifier)")
-        handleTransition(region, transitionType: 1)
-    }
 
-    func locationManager(manager: CLLocationManager, didExitRegion region: CLRegion) {
-        log("Exiting region \(region.identifier)")
-        handleTransition(region, transitionType: 2)
-    }
-*/
     func locationManager(manager: CLLocationManager, didStartMonitoringForRegion region: CLRegion) {
         log("Starting monitoring for region \(region)")
         delay(0.2) {
